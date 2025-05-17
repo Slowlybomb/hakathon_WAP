@@ -84,7 +84,7 @@ def error_burst_detector():
         ).fetchall()
 
         # Filter to only error codes (e.g. 4xx or 5xx)
-        error_requests = [(datetime.fromisoformat(row[0]), row[1]) for row in requests if str(row[1]).startswith(('4', '5'))]
+        error_requests = [(parse_apache_time(row[0]), row[1]) for row in requests if str(row[1]).startswith(('4', '5'))]
 
         # Sliding window to detect bursts
         for i in range(len(error_requests)):
