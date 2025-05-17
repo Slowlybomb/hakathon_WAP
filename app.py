@@ -12,7 +12,7 @@ Session(app)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-
+    human_vs_bot_analysis()
     return render_template("index.html")
 
 def read_log(filename):
@@ -44,3 +44,9 @@ def read_log(filename):
         db.execute("INSERT INTO logfile (ip, timestamp, request, resource, http_code, size, agent, is_bot) VALUES (?, ?, ?, ?, ?, ?, ?, ?);", (ip, timestamp, request, resource, http_code, size, agent, isBot))
     db.commit()
     inFile.close()
+
+def human_vs_bot_analysis():
+    db = get_db()
+    total_get_requests = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'GET';").fetchone()
+    total_post_requests = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'POST';").fetchone()
+    print(f"Total GET requests: {total_get_requests[0]}\nTotal POST requests: {total_post_requests[0]}")
