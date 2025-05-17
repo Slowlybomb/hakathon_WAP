@@ -23,9 +23,8 @@ def success():
         read_log(f.filename)
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM  logfile")
+        cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
         rows = cursor.fetchall()
-
         return render_template("Analytics.html", name = f.filename, data = rows)  
 
 def read_log(filename):
