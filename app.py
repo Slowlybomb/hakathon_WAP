@@ -171,9 +171,6 @@ def find_above_average_ips():
         if ips[ip] > average_visits:
             above_average_ips.append(ip)
     return above_average_ips
-
-
-
     print(ip_dict)
 
 
