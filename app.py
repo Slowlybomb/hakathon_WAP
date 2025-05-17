@@ -19,7 +19,6 @@ Session(app)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    human_vs_bot_analysis()
     return render_template("index.html")
 
 
@@ -34,6 +33,7 @@ def success():
         cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
         rows = cursor.fetchall()
         error_burst_detector()
+        find_above_average_ips() 
         return render_template("Analytics.html", name = f.filename, data = rows)  
 
 import io
@@ -155,3 +155,21 @@ def get_ip_count():
         sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
 
     return ip_dict
+
+def find_above_average_ips():
+    ips = get_ip_count()
+    above_average_ips = []
+
+    num_ips = len(ips)
+    total_visits = 0
+    for ip in ips.values():
+        total_visits += ip
+    
+    average_visits = total_visits / num_ips
+    average_visits += (average_visits * 0.5) # Increasing average by 50% since we are only interested in addresses that visit much more than average
+    for ip in ips:
+        if ips[ip] > average_visits:
+            above_average_ips.append(ip)
+    return above_average_ips
+
+
