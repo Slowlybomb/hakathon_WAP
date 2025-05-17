@@ -6,6 +6,9 @@ from forms import RegistrationFrom
 from functools import wraps
 import time
 import pandas as pd
+import io
+import base64
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
@@ -16,23 +19,40 @@ Session(app)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    human_vs_bot_analysis()
     return render_template("index.html")
 
 
 @app.route('/success', methods=['POST'])
 def success():
     if request.method == 'POST':
-        f = request.files['file']
+        f = request.files['file'] 
         f.save(f.filename)
         read_log(f.filename)
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM  logfile")
+        cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
         rows = cursor.fetchall()
-        testing_block()
-        return render_template("Analytics.html", name=f.filename, data=rows)
+        error_burst_detector()
+        find_above_average_ips() 
+        return render_template("Analytics.html", name = f.filename, data = rows)  
 
+import io
+import base64
+import matplotlib.pyplot as plt
+
+def generate_pie_chart(ip_data):
+    labels, sizes = zip(*ip_data)
+
+    fig, ax = plt.subplots()
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    ax.axis('equal')
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight')
+    plt.close(fig)
+    img.seek(0)
+
+    return base64.b64encode(img.getvalue()).decode('utf8')
 
 def read_log(filename):
     inFile = open(filename, "r")
@@ -72,8 +92,14 @@ def human_vs_bot_analysis():
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'GET';").fetchone()
     total_post_requests = db.execute(
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'POST';").fetchone()
-    print(
-        f"Total GET requests: {total_get_requests[0]}\nTotal POST requests: {total_post_requests[0]}")
+    total_get_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'GET' AND is_bot = 0;").fetchone()
+    total_post_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'POST' AND is_bot = 0;").fetchone()
+    return {
+        "total_get":total_get_requests,
+        "total_post":total_post_requests,
+        "total_get_human":total_get_requests_hum,
+        "total_post_human":total_post_requests_hum
+        }
 
 
 def error_burst_detector():
@@ -127,6 +153,26 @@ def get_ip_count():
 
     ip_dict = dict(
         sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
+
+    return ip_dict
+
+def find_above_average_ips():
+    ips = get_ip_count()
+    above_average_ips = []
+
+    num_ips = len(ips)
+    total_visits = 0
+    for ip in ips.values():
+        total_visits += ip
+    
+    average_visits = total_visits / num_ips
+    average_visits += (average_visits * 0.5) # Increasing average by 50% since we are only interested in addresses that visit much more than average
+    for ip in ips:
+        if ips[ip] > average_visits:
+            above_average_ips.append(ip)
+    return above_average_ips
+
+
 
     print(ip_dict)
 
