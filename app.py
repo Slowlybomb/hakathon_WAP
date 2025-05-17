@@ -131,4 +131,4 @@ def get_ip_count():
 
     ip_dict = dict(sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
 
-    print(ip_dict)
+    return ip_dict
