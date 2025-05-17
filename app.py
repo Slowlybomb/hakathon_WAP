@@ -3,6 +3,9 @@ from database import get_db, close_db
 from flask_session import Session
 from forms import RegistrationFrom
 from functools import wraps
+import io
+import base64
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
@@ -26,6 +29,24 @@ def success():
         cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
         rows = cursor.fetchall()
         return render_template("Analytics.html", name = f.filename, data = rows)  
+
+import io
+import base64
+import matplotlib.pyplot as plt
+
+def generate_pie_chart(ip_data):
+    labels, sizes = zip(*ip_data)
+
+    fig, ax = plt.subplots()
+    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
+    ax.axis('equal')
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png', bbox_inches='tight')
+    plt.close(fig)
+    img.seek(0)
+
+    return base64.b64encode(img.getvalue()).decode('utf8')
 
 def read_log(filename):
     inFile = open(filename, "r")
