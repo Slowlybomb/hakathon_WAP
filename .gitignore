@@ -1,2 +1,43 @@
-venv
-__pycache__
+# Ignore Python cache files
+__pycache__/
+*.pyc
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore compiled code or build artefacts
+*.class
+*.o
+*.so
+*.exe
+build/
+dist/
+
+# Ignore IDE/editor folders
+.vscode/
+.idea/
+
+# Ignore environment variables/configs
+.env
+*.key
+*.pem
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore database files
+*.sqlite3
+*.db
+
+# Ignore node.js projects
+node_modules/
