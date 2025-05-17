@@ -4,6 +4,7 @@ from database import get_db, close_db
 from flask_session import Session
 from forms import RegistrationFrom
 from functools import wraps
+import numpy as np
 import time
 import pandas as pd
 import io
@@ -16,12 +17,10 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.config["SECRET_KEY"] = "PIZDA"
 Session(app)
 
-
 @app.route("/", methods=['GET', 'POST'])
 def index():
     human_vs_bot_analysis()
     return render_template("index.html")
-
 
 @app.route('/success', methods=['POST'])
 def success():
@@ -31,24 +30,28 @@ def success():
         read_log(f.filename)
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
+        cursor.execute("SELECT * FROM logfile")
         rows = cursor.fetchall()
+
+        cursor.execute("SELECT ip, COUNT(*)  FROM logfile GROUP BY ip ORDER BY COUNT(*) DESC LIMIT 10")
+        ip_data = cursor.fetchall()
+        chart1 = generate_bar_chart(ip_data)
+        
         error_burst_detector()
-        return render_template("Analytics.html", name = f.filename, data = rows)  
+        return render_template("Analytics.html", name=f.filename, data=rows, chart1=chart1)
 
-import io
-import base64
-import matplotlib.pyplot as plt
+def generate_bar_chart(ip_data):
+    labels, values = zip(*ip_data)
 
-def generate_pie_chart(ip_data):
-    labels, sizes = zip(*ip_data)
-
-    fig, ax = plt.subplots()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=140)
-    ax.axis('equal')
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.barh(labels, values, color='skyblue')
+    ax.set_xlabel('Number of Requests and total size')
+    ax.set_title('Requests per IP')
+    ax.invert_yaxis()
 
     img = io.BytesIO()
-    plt.savefig(img, format='png', bbox_inches='tight')
+    plt.tight_layout()
+    plt.savefig(img, format='png')
     plt.close(fig)
     img.seek(0)
 
