@@ -33,12 +33,10 @@ def success():
         cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUp BY ip")
         rows = cursor.fetchall()
         error_burst_detector()
-        find_above_average_ips() 
+        # find_above_average_ips()
+        requests_per_time()
         return render_template("Analytics.html", name = f.filename, data = rows)  
 
-import io
-import base64
-import matplotlib.pyplot as plt
 
 def generate_pie_chart(ip_data):
     labels, sizes = zip(*ip_data)
@@ -103,23 +101,36 @@ def human_vs_bot_analysis():
 
 
 def error_burst_detector():
+    """
+    Detects 'error bursts' — defined as 3 or more error responses (HTTP 4xx or 5xx)
+    from the same IP address occurring within a 1-minute window.
+    Returns a list of dictionaries containing the IP, start time of the burst, and the error count.
+    """
     db = get_db()
-    rows = db.execute(
-        "SELECT ip, timestamp, http_code FROM logfile WHERE http_code LIKE '4%' OR http_code LIKE '5%';").fetchall()
+    # Step 1: Query all error status codes (4xx and 5xx) with associated timestamps and IPs
+    rows = db.execute("""
+        SELECT ip, timestamp, http_code 
+        FROM logfile 
+        WHERE http_code LIKE '4%' OR http_code LIKE '5%';
+    """).fetchall()
 
-    # Convert to DataFrame
+    # Step 2: Load query results into a pandas DataFrame for efficient processing
     df = pd.DataFrame(rows, columns=['ip', 'timestamp', 'http_code'])
+
+    # Step 3: Clean and convert the timestamp string to pandas datetime format
+    # Timestamps are in Apache format: '[17/Apr/2025:05:14:29 +0100]'
     df['timestamp'] = df['timestamp'].str.strip('[]').str.split().str[0]
-    df['timestamp'] = pd.to_datetime(
-        df['timestamp'], format='%d/%b/%Y:%H:%M:%S')
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%d/%b/%Y:%H:%M:%S')
 
     results = []
 
+    # Step 4: Group the DataFrame by IP address
     for ip, group in df.groupby('ip'):
+        # Sort each IP group chronologically
         group = group.sort_values('timestamp')
         times = group['timestamp'].values
 
-        # Use rolling window: for each row, check if 3+ entries are within 1 minute ahead
+        # Step 5: Sliding window to find 3 or more errors within a 60-second period
         for i in range(len(times)):
             count = 1
             j = i + 1
@@ -127,10 +138,12 @@ def error_burst_detector():
                 count += 1
                 j += 1
             if count >= 3:
-                results.append(
-                    {'ip': ip, 'start_time': times[i], 'error_count': count})
-                break  # Report once per IP
-
+                results.append({
+                    'ip': ip,
+                    'start_time': times[i],
+                    'error_count': count
+                })
+                break  # Report only the first burst per IP
     return results
 
 
@@ -153,7 +166,7 @@ def get_ip_count():
 
     ip_dict = dict(
         sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
-
+    print(ip_dict)
     return ip_dict
 
 def find_above_average_ips():
@@ -171,16 +184,36 @@ def find_above_average_ips():
         if ips[ip] > average_visits:
             above_average_ips.append(ip)
     return above_average_ips
-    print(ip_dict)
 
+def requests_per_time():
+    """
+    Calculates and prints the number of HTTP requests per day from the Apache log stored in the database.
+    - Parses timestamps from the logfile table.
+    - Extracts the date portion only (ignores time and timezone).
+    - Aggregates and prints total requests for each day.
 
-def testing_block():
-    from database import get_db
-    print("Benchmarking error burst detectors...\n")
+    Return:  req_counter{date : amount of requests}
+    """
 
-    start = time.perf_counter()
-    result = error_burst_detector()
-    end = time.perf_counter()
-    print(
-        f"Original version: {len(result)} bursts found in {end - start:.4f} seconds")
-    print(result)
+    db = get_db()
+    # Step 1: Fetch all raw timestamp strings from the log table
+    rows = db.execute("SELECT timestamp FROM logfile;").fetchall()
+    # Step 2: Prepare a dictionary to hold request counts grouped by date
+    req_counter = {}
+    for row in rows:
+        # Example raw timestamp: '[17/Apr/2025:05:14:29 +0100]'
+        raw_ts = row[0].strip("[]")               # Remove brackets
+        dt_str = raw_ts.split()[0]                # Remove timezone offset, keep datetime part
+        # Step 3: Convert the cleaned string to a datetime object
+        dt = datetime.strptime(dt_str, "%d/%b/%Y:%H:%M:%S")
+        # Step 4: Truncate the datetime to just the date (year-month-day)
+        day = dt.date()
+        # Step 5: Count number of requests per day
+        if day in req_counter:
+            req_counter[day] += 1
+        else:
+            req_counter[day] = 1
+    # Step 6: Print the request count per day in chronological order
+    if __name__ == "main":
+        for day in sorted(req_counter.keys()):
+            print(f"{day} - {req_counter[day]} requests")
