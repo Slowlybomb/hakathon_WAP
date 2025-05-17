@@ -15,6 +15,19 @@ def index():
     human_vs_bot_analysis()
     return render_template("index.html")
 
+@app.route('/success', methods = ['POST'])  
+def success():  
+    if request.method == 'POST':  
+        f = request.files['file']
+        f.save(f.filename)  
+        read_log(f.filename)
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM  logfile")
+        rows = cursor.fetchall()
+
+        return render_template("Analytics.html", name = f.filename, data = rows)  
+
 def read_log(filename):
     inFile = open(filename, "r")
     db = get_db()
