@@ -50,3 +50,46 @@ def human_vs_bot_analysis():
     total_get_requests = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'GET';").fetchone()
     total_post_requests = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'POST';").fetchone()
     print(f"Total GET requests: {total_get_requests[0]}\nTotal POST requests: {total_post_requests[0]}")
+
+from datetime import datetime, timedelta
+
+def error_burst_detector():
+    """
+    Error burst detector
+    Detects errors in log files where error responses from the same IP repeat more than 3 times in one minute
+    """
+    db = get_db()
+
+    detection_list = []
+
+    ip_list = db.execute("SELECT DISTINCT ip FROM logfile;").fetchall()
+
+    for ip_row in ip_list:
+        ip = ip_row[0]
+        requests = db.execute(
+            "SELECT timestamp, http_code FROM logfile WHERE ip = ? ORDER BY timestamp ASC", (ip,)
+        ).fetchall()
+
+        # Filter to only error codes (e.g. 4xx or 5xx)
+        error_requests = [(datetime.fromisoformat(row[0]), row[1]) for row in requests if str(row[1]).startswith(('4', '5'))]
+
+        # Sliding window to detect bursts
+        for i in range(len(error_requests)):
+            count = 1
+            start_time = error_requests[i][0]
+
+            for j in range(i+1, len(error_requests)):
+                if error_requests[j][0] - start_time <= timedelta(minutes=1):
+                    count += 1
+                else:
+                    break
+
+            if count > 3:
+                detection_list.append({
+                    'ip': ip,
+                    'start_time': start_time.isoformat(),
+                    'error_count': count
+                })
+                break  # Report once per IP
+
+    return detection_list
