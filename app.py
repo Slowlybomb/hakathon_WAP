@@ -148,21 +148,4 @@ def get_ip_count():
     ip_dict = dict(
         sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
 
-    print(ip_dict)
-
-
-def testing_block():
-    from database import get_db
-    print("Benchmarking error burst detectors...\n")
-
-    start = time.perf_counter()
-    slow_result = error_burst_detector()
-    end = time.perf_counter()
-    print(
-        f"Original version: {len(slow_result)} bursts found in {end - start:.4f} seconds")
-
-    start = time.perf_counter()
-    fast_result = error_burst_detector_fast()
-    end = time.perf_counter()
-    print(
-        f"Optimised version: {len(fast_result)} bursts found in {end - start:.4f} seconds")
+    return ip_dict
