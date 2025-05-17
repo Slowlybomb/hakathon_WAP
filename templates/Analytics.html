@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>NGINX Log File Analyser</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="icon" type="image/x-icon" href="../static/img/nginx.svg">
+    <script src="{{ url_for('static', filename='menu.js') }}" type="module"></script>
+</head>
+
+<html>
+   <head>
+      <title>success</title>
+   </head>
+   <body>
+      <p>File uploaded successfully</p>
+      <p>File Name: {{name}}</p>
+
+    <body>
+        <h1>Data from SQLite</h1>
+        {% if data %}
+        <table>
+            <thead>
+                <tr>
+                    {% for col in data[0].keys() %}
+                        <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                    <tr>
+                        {% for value in row %}
+                            <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>No data found.</p>
+        {% endif %}
+    </body>
+</html>
