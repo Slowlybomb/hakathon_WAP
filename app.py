@@ -136,13 +136,8 @@ def testing_block():
     print("Benchmarking error burst detectors...\n")
 
     start = time.perf_counter()
-    slow_result = error_burst_detector()
+    result = error_burst_detector()
     end = time.perf_counter()
     print(
-        f"Original version: {len(slow_result)} bursts found in {end - start:.4f} seconds")
-
-    start = time.perf_counter()
-    fast_result = error_burst_detector_fast()
-    end = time.perf_counter()
-    print(
-        f"Optimised version: {len(fast_result)} bursts found in {end - start:.4f} seconds")
+        f"Original version: {len(result)} bursts found in {end - start:.4f} seconds")
+    print(result)
