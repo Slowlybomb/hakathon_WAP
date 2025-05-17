@@ -19,7 +19,6 @@ Session(app)
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
-    human_vs_bot_analysis()
     return render_template("index.html")
 
 @app.route('/success', methods=['POST'])
@@ -38,6 +37,7 @@ def success():
         chart1 = generate_bar_chart(ip_data)
         
         error_burst_detector()
+        find_above_average_ips() 
         return render_template("Analytics.html", name=f.filename, data=rows, chart1=chart1)
 
 def generate_bar_chart(ip_data):
@@ -95,8 +95,14 @@ def human_vs_bot_analysis():
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'GET';").fetchone()
     total_post_requests = db.execute(
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'POST';").fetchone()
-    print(
-        f"Total GET requests: {total_get_requests[0]}\nTotal POST requests: {total_post_requests[0]}")
+    total_get_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'GET' AND is_bot = 0;").fetchone()
+    total_post_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'POST' AND is_bot = 0;").fetchone()
+    return {
+        "total_get":total_get_requests,
+        "total_post":total_post_requests,
+        "total_get_human":total_get_requests_hum,
+        "total_post_human":total_post_requests_hum
+        }
 
 
 def error_burst_detector():
@@ -152,3 +158,32 @@ def get_ip_count():
         sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
 
     return ip_dict
+
+def find_above_average_ips():
+    ips = get_ip_count()
+    above_average_ips = []
+
+    num_ips = len(ips)
+    total_visits = 0
+    for ip in ips.values():
+        total_visits += ip
+    
+    average_visits = total_visits / num_ips
+    average_visits += (average_visits * 0.5) # Increasing average by 50% since we are only interested in addresses that visit much more than average
+    for ip in ips:
+        if ips[ip] > average_visits:
+            above_average_ips.append(ip)
+    return above_average_ips
+    print(ip_dict)
+
+
+def testing_block():
+    from database import get_db
+    print("Benchmarking error burst detectors...\n")
+
+    start = time.perf_counter()
+    result = error_burst_detector()
+    end = time.perf_counter()
+    print(
+        f"Original version: {len(result)} bursts found in {end - start:.4f} seconds")
+    print(result)
