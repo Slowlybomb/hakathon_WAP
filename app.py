@@ -118,3 +118,17 @@ def parse_apache_time(timestamp):
     
 if __name__ == "main":
     error_burst_detector()
+
+def get_ip_count():
+    db = get_db()
+    ip_dict = {}
+    ips = db.execute("""
+        SELECT ip, COUNT(ip) FROM logfile GROUP BY ip;
+    """).fetchall()
+
+    for ip in ips:
+        ip_dict[ip[0]] = ip[1]
+
+    ip_dict = dict(sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
+
+    print(ip_dict)
