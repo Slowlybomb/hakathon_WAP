@@ -17,29 +17,31 @@
       <p>File uploaded successfully</p>
       <p>File Name: {{name}}</p>
 
-    <body>
-        <h1>Data from SQLite</h1>
-        {% if data %}
-        <table>
-            <thead>
-                <tr>
-                    {% for col in data[0].keys() %}
-                        <th>{{ col }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for row in data %}
+    <body class = "container">
+        <div class="content">
+            <h1>Data from SQLite</h1>
+            {% if data %}
+            <table>
+                <thead>
                     <tr>
-                        {% for value in row %}
-                            <td>{{ value }}</td>
+                        {% for col in data[0].keys() %}
+                            <th>{{ col }}</th>
                         {% endfor %}
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-            <p>No data found.</p>
-        {% endif %}
+                </thead>
+                <tbody>
+                    {% for row in data %}
+                        <tr>
+                            {% for value in row %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p>No data found.</p>
+            {% endif %}
+        </div>
     </body>
 </html>

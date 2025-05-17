@@ -1,0 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+}
+
+.content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 90vw;   /* 90% of viewport width */
+    height: 50vh;  /* 50% of viewport height */
+    overflow: auto;  /* Enable scrolling */
+}
+
+/* Optional: style the table itself */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    max-width: 200px;  /* Avoid squashing */
+    overflow: auto;  /* Enable scrolling */
+}
+
+th {
+    background-color: #f1f1f1;
+}
