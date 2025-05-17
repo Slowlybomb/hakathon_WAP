@@ -25,7 +25,7 @@ def success():
         cursor = db.cursor()
         cursor.execute("SELECT * FROM  logfile")
         rows = cursor.fetchall()
-
+        error_burst_detector()
         return render_template("Analytics.html", name = f.filename, data = rows)  
 
 def read_log(filename):
@@ -104,5 +104,17 @@ def error_burst_detector():
                     'error_count': count
                 })
                 break  # Report once per IP
+    
+    for burst in detection_list:
+        print(burst)
 
     return detection_list
+
+def parse_apache_time(timestamp):
+    # Strip the brackets and timezone if needed
+    timestamp = timestamp.strip("[]")
+    dt_part = timestamp.split()[0]  # e.g. '17/Apr/2025:05:14:29'
+    return datetime.strptime(dt_part, "%d/%b/%Y:%H:%M:%S")
+    
+if __name__ == "main":
+    error_burst_detector()
