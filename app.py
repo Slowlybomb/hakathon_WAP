@@ -37,7 +37,7 @@ def success():
         chart1 = generate_bar_chart(ip_data)
         
         error_burst_detector()
-        find_above_average_ips() 
+        find_above_average_ips()
         return render_template("Analytics.html", name=f.filename, data=rows, chart1=chart1)
 
 def generate_bar_chart(ip_data):
