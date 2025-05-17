@@ -1,46 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>NGINX Log File Analyser</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
-    <link rel="icon" type="image/x-icon" href="../static/img/nginx.svg">
-    <script src="{{ url_for('static', filename='menu.js') }}" type="module"></script>
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='img/nginx.svg') }}"
+    />
 
-<html>
-    <head>
-        <title>success</title>
-    </head>
-    <body class = "container">
-        <div class="content">
-            <h1>Data from SQLite</h1>
-            {% if data %}
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in data[0].keys() %}
-                            <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in data[:100] %}
-                        <tr>
-                            {% for value in row %}
-                                <td>{{ value }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-                <p>No data found.</p>
-            {% endif %}
-        </div>
-        <h2>Pie Chart: Requests per IP</h2>
-        <img src="data:image/png;base64,{{ chart1 }}" alt="Pie Chart">
+    <!-- DataTables CSS + Buttons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css"
+    />
 
-    </body>
+    <style>
+      .details-control {
+        cursor: pointer;
+      }
+      tr.bot-row {
+        border-left: 4px solid orange;
+      }
+    </style>
+  </head>
+
+  <body class="container">
+    <h2>Pie Chart: Requests per IP</h2>
+    <img src="data:image/png;base64,{{ chart1 }}" alt="Pie Chart" />
+
+    <div class="content">
+      <h2>Log Records</h2>
+
+      {% if data %}
+      <table id="logTable" class="display nowrap" style="width: 100%">
+        <thead>
+          <tr>
+            <th></th>
+            {% for col in data[0].keys() %}
+            <th>{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data[:1000] %}
+          <tr class="{% if row['is_bot'] %}bot-row{% endif %}">
+            <td class="details-control">▶</td>
+            {% for value in row.values() %}
+            <td>{{ value }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No data found.</p>
+      {% endif %}
+    </div>
+
+    <!-- JS Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    <script src="{{ url_for('static', filename='logtable.js') }}"></script>
+  </body>
 </html>

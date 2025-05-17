@@ -9,6 +9,8 @@ import time
 import pandas as pd
 import io
 import base64
+import matplotlib
+matplotlib.use('Agg')  # Use a non-GUI backend
 import matplotlib.pyplot as plt
 
 app = Flask(__name__)
@@ -24,21 +26,19 @@ def index():
 @app.route('/success', methods=['POST'])
 def success():
     if request.method == 'POST':
-        f = request.files['file'] 
+        f = request.files['file']
         f.save(f.filename)
         read_log(f.filename)
         db = get_db()
         cursor = db.cursor()
+        # Convert rows to list of dicts
         cursor.execute("SELECT * FROM logfile")
         rows = cursor.fetchall()
-        cursor.execute("SELECT ip, COUNT(*)  FROM logfile GROUP BY ip ORDER BY COUNT(*) DESC LIMIT 10")
+        data = [dict(row) for row in rows]  # <-- KEY FIX
+        cursor.execute("SELECT ip, COUNT(*) FROM logfile GROUP BY ip ORDER BY COUNT(*) DESC LIMIT 10")
         ip_data = cursor.fetchall()
         chart1 = generate_bar_chart(ip_data)
-        
-        error_burst_detector()
-        # find_above_average_ips()
-        requests_per_time()
-        return render_template("Analytics.html", name = f.filename, data = rows)  
+        return render_template("Analytics.html", name=f.filename, data=data, chart1=chart1)
 
 
 def generate_bar_chart(ip_data):
@@ -52,7 +52,7 @@ def generate_bar_chart(ip_data):
 
     img = io.BytesIO()
     plt.tight_layout()
-    plt.savefig(img, format='png')
+    plt.savefig(img, format='png') 
     plt.close(fig)
     img.seek(0)
 
@@ -223,3 +223,5 @@ def requests_per_time():
     if __name__ == "main":
         for day in sorted(req_counter.keys()):
             print(f"{day} - {req_counter[day]} requests")
+
+# def 

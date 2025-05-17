@@ -1,5 +1,12 @@
+@font-face {
+  font-family: myFirstFont;
+  src: url('/static/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: "myFirstFont", Arial, sans-serif;
     background-color: #f9f9f9;
     margin: 0;
     padding: 20px;
