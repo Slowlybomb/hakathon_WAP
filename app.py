@@ -83,7 +83,7 @@ def error_burst_detector():
         ).fetchall()
 
         # Filter to only error codes (e.g. 4xx or 5xx)
-        error_requests = [(datetime.fromisoformat(row[0]), row[1]) for row in requests if str(row[1]).startswith(('4', '5'))]
+        error_requests = [(parse_apache_time(row[0]), row[1]) for row in requests if str(row[1]).startswith(('4', '5'))]
 
         # Sliding window to detect bursts
         for i in range(len(error_requests)):
@@ -103,5 +103,31 @@ def error_burst_detector():
                     'error_count': count
                 })
                 break  # Report once per IP
+    
+    for burst in detection_list:
+        print(burst)
 
     return detection_list
+
+def parse_apache_time(timestamp):
+    # Strip the brackets and timezone if needed
+    timestamp = timestamp.strip("[]")
+    dt_part = timestamp.split()[0]  # e.g. '17/Apr/2025:05:14:29'
+    return datetime.strptime(dt_part, "%d/%b/%Y:%H:%M:%S")
+    
+if __name__ == "main":
+    error_burst_detector()
+
+def get_ip_count():
+    db = get_db()
+    ip_dict = {}
+    ips = db.execute("""
+        SELECT ip, COUNT(ip) FROM logfile GROUP BY ip;
+    """).fetchall()
+
+    for ip in ips:
+        ip_dict[ip[0]] = ip[1]
+
+    ip_dict = dict(sorted(ip_dict.items(), key=lambda item: item[1], reverse=True))
+
+    print(ip_dict)
