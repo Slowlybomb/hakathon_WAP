@@ -92,8 +92,14 @@ def human_vs_bot_analysis():
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'GET';").fetchone()
     total_post_requests = db.execute(
         "SELECT COUNT(*) as count FROM logfile WHERE request = 'POST';").fetchone()
-    print(
-        f"Total GET requests: {total_get_requests[0]}\nTotal POST requests: {total_post_requests[0]}")
+    total_get_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'GET' AND is_bot = 0;").fetchone()
+    total_post_requests_hum = db.execute("SELECT COUNT(*) as count FROM logfile WHERE request = 'POST' AND is_bot = 0;").fetchone()
+    return {
+        "total_get":total_get_requests,
+        "total_post":total_post_requests,
+        "total_get_human":total_get_requests_hum,
+        "total_post_human":total_post_requests_hum
+        }
 
 
 def error_burst_detector():
