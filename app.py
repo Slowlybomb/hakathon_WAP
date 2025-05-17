@@ -26,7 +26,7 @@ def index():
 @app.route('/success', methods=['POST'])
 def success():
     if request.method == 'POST':
-        f = request.files['file']
+        f = request.files['file'] 
         f.save(f.filename)
         read_log(f.filename)
         db = get_db()
